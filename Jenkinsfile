@@ -2,20 +2,20 @@ pipeline {
     agent any
 
     environment {
-        GIT_CREDENTIALS = 'github-token'
-        SONAR_TOKEN = credentials('SonarQube') // Secret Text
-        TOMCAT_CREDENTIALS = 'tomcat-credentials'
-        TOMCAT_IP = credentials('tomcat-ip')
-        NEXUS_CREDENTIALS = 'nexus-credentials'
-        NEXUS_URL = credentials('nexus-url')
-        RECIPIENT_EMAIL = credentials('recipient-email')
+        GIT_CREDENTIALS    = 'github-token'         // GitHub token (if repo is private)
+        SONARQUBE_ENV      = 'SonarQube'            // SonarQube server configured in Jenkins
+        SONAR_TOKEN        = 'sonar-token'          // Secret Text (token stored in Jenkins)
+        TOMCAT_CREDENTIALS = 'tomcat-cred'   // SSH Username with private key
+        TOMCAT_IP          = 'tomcat-url'            // Secret Text (IP address)
+        NEXUS_CREDENTIALS  = 'nexus-cred'    // Username + Password
+        NEXUS_URL          = 'nexus-url'            // Secret Text (Nexus repo URL)
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
                 git branch: 'dev',
-                    url: 'https://github.com/Hajixhayjhay/NumberGuessGame1.git',
+                    url: 'https://github.com/saude27/NumberGuessGame1.git',
                     credentialsId: "${GIT_CREDENTIALS}"
             }
         }
@@ -29,8 +29,10 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh "/usr/share/maven/bin/mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}"
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    withCredentials([string(credentialsId: "${SONAR_TOKEN}", variable: 'SONAR_TOKEN')]) {
+                        sh "/usr/share/maven/bin/mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN"
+                    }
                 }
             }
         }
@@ -38,34 +40,43 @@ pipeline {
         stage('Upload to Nexus') {
             steps {
                 echo 'Uploading artifact to Nexus...'
-                // Example, replace with actual deployment commands
-                // sh "mvn deploy -Dnexus.username=... -Dnexus.password=..."
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIALS}",
+                                                 usernameVariable: 'NEXUS_USER',
+                                                 passwordVariable: 'NEXUS_PASS'),
+                                 string(credentialsId: "${NEXUS_URL}", variable: 'NEXUS_URL')]) {
+                    sh """
+                        /usr/share/maven/bin/mvn deploy \
+                            -DskipTests=true \
+                            -Dnexus.url=$NEXUS_URL \
+                            -Dnexus.username=$NEXUS_USER \
+                            -Dnexus.password=$NEXUS_PASS
+                    """
+                }
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
                 echo 'Deploying WAR to Tomcat...'
-                sh """
-                    scp -i /var/lib/jenkins/.ssh/tomcat-key target/NumberGuessGame-1.0-SNAPSHOT.war ubuntu@${TOMCAT_IP}:/opt/tomcat/webapps/
-                    ssh -i /var/lib/jenkins/.ssh/tomcat-key ubuntu@${TOMCAT_IP} 'sudo systemctl restart tomcat'
-                """
+                withCredentials([sshUserPrivateKey(credentialsId: "${TOMCAT_CREDENTIALS}",
+                                                  keyFileVariable: 'SSH_KEY',
+                                                  usernameVariable: 'SSH_USER'),
+                                 string(credentialsId: "${TOMCAT_IP}", variable: 'TOMCAT_IP')]) {
+                    sh """
+                        scp -i $SSH_KEY target/NumberGuessGame-1.0-SNAPSHOT.war $SSH_USER@$TOMCAT_IP:/opt/tomcat/webapps/
+                        ssh -i $SSH_KEY $SSH_USER@$TOMCAT_IP 'sudo systemctl restart tomcat'
+                    """
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
-            mail to: "${RECIPIENT_EMAIL}",
-                 subject: "SUCCESS: Build ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "Good news! The build succeeded."
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed!'
-            mail to: "${RECIPIENT_EMAIL}",
-                 subject: "FAILURE: Build ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "Build failed. Check Jenkins for details."
+            echo '❌ Pipeline failed!'
         }
     }
 }
