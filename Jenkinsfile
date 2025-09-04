@@ -3,12 +3,11 @@ pipeline {
 
     environment {
         GIT_CREDENTIALS = 'github-token'
-        SONAR_TOKEN = credentials('SonarQube') // Secret Text
-        TOMCAT_CREDENTIALS = 'tomcat-credentials'
-        TOMCAT_IP = credentials('tomcat-ip')
-        NEXUS_CREDENTIALS = 'nexus-credentials'
+        SONAR_TOKEN = credentials('sonar-token') // Secret Text
+        TOMCAT_CREDENTIALS = 'tomcat-cred'
+        TOMCAT_IP = credentials('tomcat-url')
+        NEXUS_CREDENTIALS = 'nexus-cred'
         NEXUS_URL = credentials('nexus-url')
-        RECIPIENT_EMAIL = credentials('recipient-email')
     }
 
     stages {
