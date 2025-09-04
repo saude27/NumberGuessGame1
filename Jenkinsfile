@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        GIT_CREDENTIALS    = 'github-token'         // GitHub token (if repo is private)
         SONARQUBE_ENV      = 'SonarQube'            // SonarQube server configured in Jenkins
         SONAR_TOKEN        = 'sonar-token'          // Secret Text (token stored in Jenkins)
         TOMCAT_CREDENTIALS = 'tomcat-cred'   // SSH Username with private key
@@ -16,7 +15,6 @@ pipeline {
             steps {
                 git branch: 'dev',
                     url: 'https://github.com/saude27/NumberGuessGame1.git',
-                    credentialsId: "${GIT_CREDENTIALS}"
             }
         }
 
