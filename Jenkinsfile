@@ -54,16 +54,16 @@ pipeline {
                     sshUserPrivateKey(credentialsId: 'tomcat-cred', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
                     string(credentialsId: 'tomcat-url', variable: 'TOMCAT_IP')
                 ]) {
-                    sh '''
+                    sh """
                         # Copy WAR to webapps folder
-                        scp -o StrictHostKeyChecking=no -i $SSH_KEY target/NumberGuessGame-1.0-SNAPSHOT.war $SSH_USER@$TOMCAT_IP:/home/$SSH_USER/apache-tomcat-11.0.10/webapps/
+                        scp -o StrictHostKeyChecking=no -i $SSH_KEY target/NumberGuessGame-1.0-SNAPSHOT.war $SSH_USER@$TOMCAT_IP:/home/ec2-user/apache-tomcat-11.0.10/webapps/
 
-                        # Stop Tomcat (ignore error if not running)
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP '/home/$SSH_USER/apache-tomcat-11.0.10/bin/shutdown.sh || true'
+                        # Stop Tomcat
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP "/home/ec2-user/apache-tomcat-11.0.10/bin/shutdown.sh || true"
 
                         # Start Tomcat
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP '/home/$SSH_USER/apache-tomcat-11.0.10/bin/startup.sh'
-                    '''
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP "/home/ec2-user/apache-tomcat-11.0.10/bin/startup.sh"
+                    """
                 }
             }
         }
@@ -78,6 +78,7 @@ pipeline {
         }
     }
 }
+
 
 
 
