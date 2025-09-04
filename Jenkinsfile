@@ -30,12 +30,12 @@ pipeline {
         }
 
         stage('Upload to Nexus') {
-            steps {
-                echo 'Uploading artifact to Nexus...'
-                withCredentials([
-                    usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS'),
-                    string(credentialsId: 'nexus-url', variable: 'NEXUS_URL')
-                ]) {
+    steps {
+        echo 'Uploading artifact to Nexus...'
+        withCredentials([
+            usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS'),
+            string(credentialsId: 'nexus-url', variable: 'NEXUS_URL')
+        ]) {
                     sh """
                         /usr/share/maven/bin/mvn deploy \
                             -DskipTests=true \
