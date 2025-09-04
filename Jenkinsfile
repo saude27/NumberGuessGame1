@@ -54,7 +54,7 @@ pipeline {
             sshUserPrivateKey(credentialsId: 'tomcat-cred', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
             string(credentialsId: 'tomcat-url', variable: 'TOMCAT_IP')
         ]) {
-            sh """
+            sh '''
                 # Make sure webapps directory exists
                 ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP 'mkdir -p /home/$SSH_USER/apache-tomcat-11.0.10/webapps'
 
@@ -64,10 +64,11 @@ pipeline {
                 # Restart Tomcat manually
                 ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP '/home/$SSH_USER/apache-tomcat-11.0.10/bin/shutdown.sh || true'
                 ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP '/home/$SSH_USER/apache-tomcat-11.0.10/bin/startup.sh'
-            """
+            '''
         }
     }
 }
+
 
     post {
         success {
