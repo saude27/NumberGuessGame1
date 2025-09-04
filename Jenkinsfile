@@ -48,16 +48,16 @@ pipeline {
         }
 
         stage('Deploy to Tomcat') {
-            steps {
-                echo 'Deploying WAR to Tomcat...'
-                withCredentials([
-                    sshUserPrivateKey(credentialsId: 'tomcat-cred', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
-                    string(credentialsId: 'tomcat-url', variable: 'TOMCAT_IP')
-                ]) {
-                    sh """
-                        scp -o StrictHostKeyChecking=no -i $SSH_KEY target/NumberGuessGame-1.0-SNAPSHOT.war $SSH_USER@$TOMCAT_IP:/opt/tomcat/webapps/
-                        ssh -i $SSH_KEY $SSH_USER@$TOMCAT_IP 'sudo systemctl restart tomcat'
-                    """
+    steps {
+        echo 'Deploying WAR to Tomcat...'
+        withCredentials([
+            sshUserPrivateKey(credentialsId: 'tomcat-cred', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+            string(credentialsId: 'tomcat-url', variable: 'TOMCAT_IP')
+        ]) {
+            sh """
+                scp -o StrictHostKeyChecking=no -i $SSH_KEY target/NumberGuessGame-1.0-SNAPSHOT.war $SSH_USER@$TOMCAT_IP:/opt/tomcat/webapps/
+                ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$TOMCAT_IP 'sudo systemctl restart tomcat'
+            """
                 }
             }
         }
