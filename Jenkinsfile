@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_ENV = 'SonarQube'
+        SONARQUBE_ENV = 'SonarQube'   // SonarQube server configured in Jenkins
     }
 
     stages {
@@ -55,27 +55,9 @@ pipeline {
                     string(credentialsId: 'tomcat-url', variable: 'TOMCAT_IP')
                 ]) {
                     sh """
-                        # Copy WAR to existing webapps folder
-                        scp -o StrictHostKeyChecking=no -i \$SSH_KEY target/NumberGuessGame-1.0-SNAPSHOT.war \$SSH_USER@\$TOMCAT_IP:/home/\$SSH_USER/apache-tomcat-11.0.10/webapps/
+                        # Copy WAR to webapps folder
+                        scp -o StrictHostKeyChecking=no -i \$SSH_KEY target/NumberGuessGame-1.0-_
 
-                        # Restart Tomcat
-                        ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@\$TOMCAT_IP '/home/\$SSH_USER/apache-tomcat-11.0.10/bin/shutdown.sh || true'
-                        ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@\$TOMCAT_IP '/home/\$SSH_USER/apache-tomcat-11.0.10/bin/startup.sh'
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Pipeline completed successfully!'
-        }
-        failure {
-            echo '❌ Pipeline failed!'
-        }
-    }
-}
 
 
 
